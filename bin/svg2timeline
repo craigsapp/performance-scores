@@ -1,0 +1,123 @@
+#!/usr/bin/env perl
+#
+# Programmer:    Craig Stuart Sapp <craig.stanford.edu>
+# Creation Date: Wed Nov 29 12:08:40 JST 2023
+# Last Modified: Wed Nov 29 12:08:43 JST 2023
+# Filename:      svg2timeline
+# Syntax:        perl 5
+#
+# Description:   Convert SVG image into a mapping of time to pixels in companion PNG image.
+#
+
+use strict;
+use Getopt::Long;
+
+# $reduce: reduction factor for shrinking the size of the output png.
+# Many programs have problems with images 32768 pixels wide.  So
+# this value is used to shrink the image width to less than 32768.
+# Could be made more automated in the future.
+my $reduce = 4;
+
+my $barnumQ = 0;
+
+Getopt::Long::Configure("bundling");
+GetOptions (
+   'b|m|bar|bars|barnum|barnums|measure|measures' => \$barnumQ,
+   'r|reduce=s' => \$reduce
+);
+
+die "Usage: $0 file.svg\n" if @ARGV == 0;
+
+my $file = $ARGV[0];
+
+my @results = processFile($file);
+
+print "#qtime\tpixel\tbarnum\n";
+
+if (!$barnumQ) {
+	print join("\n", @results), "\n";
+} else {
+	for (my $i=0; $i<@results; $i++) {
+		my $line = $results[$i];
+		my @data = split(/\t+/, $line);
+		if (@data == 3) {
+			print "$line\n";
+		}
+	}
+}
+
+exit(0);
+
+
+###########################################################################
+
+##############################
+##
+## processFile --
+##
+## Also rqon and rqoff (rests to consider or ignore).  Currently rests are included.
+##
+## Barine:
+##    <g id="measure-L21" class="measure m-2">
+##
+
+sub processFile {
+	my ($file) = @_;
+	my @output;
+	open (FILE, $file) or die "Cannot read $file\n";
+	my @contents = <FILE>;
+	close FILE;
+	chomp @contents;
+	my $qon = 0;
+	my $qoff = 0;
+	my %pixels;
+	my %bars;
+	my $barnum = -1;
+	for (my $i=0; $i<@contents; $i++) {
+		my $line = $contents[$i];
+		if ($line =~ /use.*x="(\d+)/) {
+			my $x = $1;
+			$pixels{$qon} = $x;
+			next;
+		}
+		if ($line =~ /<g.*id="measure.*class=".*\bm-(\d+)/) {
+			$barnum = $1;
+			next;
+		}
+		next if $line !~ /qon-([\d_]+)/;
+		$qon = $1;
+		next if $line !~ /qoff-([\d_]+)/;
+		$qoff = $1;
+		if ($barnum >= 0) {
+			$bars{$qon} = $barnum;
+			$barnum = -1;
+		}
+		if ($qon =~ /^(\d+)_(\d+)$/) {
+			my $top = $1;
+			my $bot = $2;
+			$qon = $top / $bot;
+		}
+		if ($qoff =~ /^(\d+)_(\d+)$/) {
+			my $top = $1;
+			my $bot = $2;
+			$qoff = $top / $bot;
+		}
+	}
+
+	my @keys = sort {$a <=> $b} keys %pixels;
+
+	for (my $i=0; $i<@keys; $i++) {
+		my $qtime = $keys[$i];
+		my $pixel = int($pixels{$qtime} / $reduce + 0.5);
+		my $bnum = $bars{$qtime};
+		$output[@output] = "$qtime\t$pixel";
+		if ($bnum !~ /^\s*$/) {
+			$output[$#output] .= "\t$bnum";
+		}
+	}
+
+	return @output;
+}
+
+
+

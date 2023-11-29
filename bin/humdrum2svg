@@ -1,0 +1,56 @@
+#!/usr/bin/env perl
+#
+# Programmer:    Craig Stuart Sapp <craig.stanford.edu>
+# Creation Date: Wed Nov 29 10:52:32 JST 2023
+# Last Modified: Wed Nov 29 10:52:35 JST 2023
+# Filename:      humdrum2svg
+# Syntax:        perl 5
+#
+# Description:   Convert a Humdrum score into a single system 
+#                score in SVG format.
+#
+
+use strict;
+
+my $verovio = `which verovio`;
+chomp $verovio;
+die "Install verovio first.\n" if $verovio =~ /^\s*$/;
+
+die "Usage: $0 file.krn [file2.krn ...]\n" if @ARGV == 0;
+
+my @files = @ARGV;
+
+foreach my $file (@files) {
+	processFile($file);
+}
+
+exit(0);
+
+
+###########################################################################
+
+##############################
+##
+## processFile -- Convert Humdrum score to SVG.
+##
+
+sub processFile {
+	my ($file) = @_;
+	my $output = $file;
+	$output =~ s/krn$/svg/;
+	die "Problem with input filename: $file: requires .krn ending\n" if $output eq $file;
+	my $command = "$verovio";
+	$command .= " --page-width 100000";  # set page width to maximum length
+	$command .= " --adjust-page-width";  # shrink SVG width to length of rendered system
+	$command .= " --adjust-page-height"; # shrink SVG height to height of rendered system
+	$command .= " --hum-type";           # Embed quarter-note timestamps for notes
+	$command .= " --footer none";        # Do not display page footer
+	$command .= " --header none";        # Do not display page header
+	$command .= " --mnum-interval 5";    # Number every fifth barline
+	$command .= " $file";                # Input filename
+	print STDERR "$command\n";
+	my $result = `$command`;
+}
+
+
+

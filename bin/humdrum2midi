@@ -1,0 +1,50 @@
+#!/usr/bin/env perl
+#
+# Programmer:    Craig Stuart Sapp <craig.stanford.edu>
+# Creation Date: Wed Nov 29 16:57:00 JST 2023
+# Last Modified: Wed Nov 29 16:57:03 JST 2023
+# Filename:      humdrum2midi
+# Syntax:        perl 5
+#
+# Description:   Convert a Humdrum score into a Standard MIDI File
+#                using verovio.
+#
+
+use strict;
+
+my $verovio = `which verovio`;
+chomp $verovio;
+die "Install verovio first.\n" if $verovio =~ /^\s*$/;
+
+my @files = @ARGV;
+
+die "Usage: $0 file.krn [file2.krn ...]\n" if @ARGV == 0;
+
+foreach my $file (@files) {
+	processFile($file);
+}
+
+exit(0);
+
+
+###########################################################################
+
+##############################
+##
+## processFile -- Convert Humdrum score into a MIDI file.
+##
+
+sub processFile {
+	my ($file) = @_;
+	my $output = $file;
+	$output =~ s/krn$/mid/;
+	die "Problem with input filename: $file: requires .krn ending\n" if $output eq $file;
+	my $command = "$verovio";
+	$command .= " -t midi";  # set output file format to MIDI.
+	$command .= " $file";                # Input filename
+	print STDERR "$command\n";
+	my $result = `$command`;
+}
+
+
+

@@ -1,0 +1,73 @@
+#!/usr/bin/env perl
+#
+# Programmer:    Craig Stuart Sapp <craig.stanford.edu>
+# Creation Date: Wed Nov 29 13:00:39 JST 2023
+# Last Modified: Wed Nov 29 13:00:42 JST 2023
+# Filename:      reduction-factor
+# Syntax:        perl 5
+#
+# Description:   Extract reduction factor for PNG imgages (and timelines)
+#                for limiting image width to less than 32,768 pixels.
+#
+
+use strict;
+use Getopt::Long;
+
+my $verbose = 0;  # print input/output image widths as well.
+Getopt::Long::Configure("bundling");
+GetOptions (
+   'v|verbose' => \$verbose
+);
+
+die "Usage: $0 file.krn [file2.krn ...]\n" if @ARGV == 0;
+
+my $file = $ARGV[0];
+
+die "Input file must be an SVG image: $file\n" if $file !~ /\.svg$/;
+
+processFile($file);
+
+exit(0);
+
+
+###########################################################################
+
+##############################
+##
+## processFile -- Convert Humdrum score to SVG.
+##   width is given on the second line:
+##      <svg width="80880px" height="681px"
+##
+
+sub processFile {
+	my ($file) = @_;
+	open (FILE, $file) or die "Cannot read $file\n";
+	my $width = 0;
+	while (my $line = <FILE>) {
+		next if $line !~ /width="(\d+)\.?\d*px"/;
+		$width = $1;
+		last;
+	}
+	close FILE;
+	if (!$width) {
+		if (!$verbose) {
+			print "1\n";
+		} else {
+			my $factor = 1;
+			my $newWidth = int($width / $factor + 0.5);
+			print "1\t$width\t$newWidth\n";
+		}
+		return;
+	}
+
+	my $factor = int($width / 32768) + 1;
+	if (!$verbose) {
+		print "$factor\n";
+	} else {
+		my $newWidth = int($width / $factor + 0.5);
+		print "$factor\t$width\t$newWidth\n";
+	}
+}
+
+
+

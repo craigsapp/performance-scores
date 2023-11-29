@@ -1,0 +1,81 @@
+#!/usr/bin/env perl
+#
+# Programmer:    Craig Stuart Sapp <craig.stanford.edu>
+# Creation Date: Wed Nov 29 11:10:56 JST 2023
+# Last Modified: Wed Nov 29 11:10:59 JST 2023
+# Filename:      svg2png
+# Syntax:        perl 5
+#
+# Description:   Convert SVG image into PNG image.  Create both transparent and
+#                white background versions.
+#
+
+use strict;
+use Getopt::Long;
+
+# $reduce: reduction factor for shrinking the size of the output png.
+# Many programs have problems with images 32768 pixels wide.  So
+# this value is used to shrink the image width to less than 32768.
+# Could be made more automated in the future.
+my $reduce = 4;
+
+Getopt::Long::Configure("bundling");
+GetOptions (
+   'r|reduce=s' => \$reduce
+);
+
+my $convert = `which convert`;
+chomp $convert;
+die "Cannot find convert command from ImageMagick.  Install it first with 'brew install imagemagick' in macos\n" if $convert =~ /^\s*$/;
+
+my $rsvgConvert = `which rsvg-convert`;
+chomp $rsvgConvert;
+die "Cannot find rsvg-convert command.  Install it first with 'brew install librsvg' in macos\n" if $convert =~ /^\s*$/;
+
+my @files = @ARGV;
+
+die "Usage: $0 file(s)\n" if @files == 0;
+
+foreach my $file (@files) {
+	processFile($file);
+}
+
+
+###########################################################################
+
+##############################
+##
+## processFile -- Convert SVG image into two PNG images.
+##
+
+sub processFile {
+	my ($file) = @_;
+	open (FILE, $file) or die "Cannot read $file\n";
+	my @contents = <FILE>;
+	close FILE;
+	chomp @contents;
+	my $outfile = $file;
+	my $outfile2 = $file;
+	$outfile =~ s/\.svg$/-transparent.png/;
+	$outfile2 =~ s/\.svg$/-white.png/;
+	die "Error: $file needs to end in .svg\n" if $outfile eq $file;
+	my $line = $contents[1];
+	if ($line !~ /width="(\d+)px" height="(\d+px)/) {
+		die "Cannot read image dimensions in $file\n";
+	}
+	my $width = $1;
+	my $height = $2;
+	my $iwidth = int($width / $reduce + 0.49);
+	my $iheight = int($height / $reduce + 0.49);
+
+	my $command = "$rsvgConvert -x 1200 -w ${iwidth} -h $iheight -f png -o $outfile $file";
+	print STDERR "$command\n";
+	my $info = `$command`;
+
+	my $command2 = "$convert $outfile -background white -alpha remove -alpha off $outfile2";
+	print STDERR "$command2\n";
+	my $info2 = `$command2`;
+}
+
+
+
