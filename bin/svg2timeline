@@ -88,10 +88,6 @@ sub processFile {
 		$qon = $1;
 		next if $line !~ /qoff-([\d_]+)/;
 		$qoff = $1;
-		if ($barnum >= 0) {
-			$bars{$qon} = $barnum;
-			$barnum = -1;
-		}
 		if ($qon =~ /^(\d+)_(\d+)$/) {
 			my $top = $1;
 			my $bot = $2;
@@ -102,6 +98,10 @@ sub processFile {
 			my $top = $1;
 			my $bot = $2;
 			$qoff = $top / $bot;
+		}
+		if ($barnum >= 0) {
+			$bars{$qon} = $barnum;
+			$barnum = -1;
 		}
 	}
 
