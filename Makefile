@@ -9,7 +9,8 @@
 
 # Place humdrum score in the following directory
 # And name the file like the directory, ending in ".krn":
-EXAMPLE := chopin-op42
+#EXAMPLE := chopin-op42
+EXAMPLE := chopin-op15_2
 
 # Location of the processing scripts:
 BINDIR = bin

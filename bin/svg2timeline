@@ -96,6 +96,7 @@ sub processFile {
 			my $top = $1;
 			my $bot = $2;
 			$qon = $top / $bot;
+			$qon = int($qon * 1000.0 + 0.5) / 1000.0;
 		}
 		if ($qoff =~ /^(\d+)_(\d+)$/) {
 			my $top = $1;
@@ -108,6 +109,7 @@ sub processFile {
 
 	for (my $i=0; $i<@keys; $i++) {
 		my $qtime = $keys[$i];
+		# $qtime = int($qtime * 1000.0 + 0.5) / 1000.0;
 		my $pixel = int($pixels{$qtime} / $reduce + 0.5);
 		my $bnum = $bars{$qtime};
 		$output[@output] = "$qtime\t$pixel";

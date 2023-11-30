@@ -40,14 +40,15 @@ sub processFile {
 	$output =~ s/krn$/svg/;
 	die "Problem with input filename: $file: requires .krn ending\n" if $output eq $file;
 	my $command = "$verovio";
-	$command .= " --page-width 100000";  # set page width to maximum length
-	$command .= " --adjust-page-width";  # shrink SVG width to length of rendered system
-	$command .= " --adjust-page-height"; # shrink SVG height to height of rendered system
-	$command .= " --hum-type";           # Embed quarter-note timestamps for notes
-	$command .= " --footer none";        # Do not display page footer
-	$command .= " --header none";        # Do not display page header
-	$command .= " --mnum-interval 5";    # Number every fifth barline
-	$command .= " $file";                # Input filename
+	$command .= " --page-width 100000";     # Set page width to maximum length
+	$command .= " --adjust-page-width";     # Shrink SVG width to length of rendered system
+	$command .= " --adjust-page-height";    # Shrink SVG height to height of rendered system
+	$command .= " --hum-type";              # Embed quarter-note timestamps for notes
+	$command .= " --footer none";           # Do not display page footer
+	$command .= " --header none";           # Do not display page header
+	$command .= " --mnum-interval 5";       # Number every fifth barline
+	$command .= " --xml-id-seed 123456789"; # Random number seed for generating ids
+	$command .= " $file";                   # Input filename
 	print STDERR "$command\n";
 	my $result = `$command`;
 }
