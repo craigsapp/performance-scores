@@ -46,7 +46,7 @@ sub processFile {
 	$command .= " --hum-type";              # Embed quarter-note timestamps for notes
 	$command .= " --footer none";           # Do not display page footer
 	$command .= " --header none";           # Do not display page header
-	$command .= " --mnum-interval 5";       # Number every fifth barline
+	$command .= " --mnum-interval 1";       # Number every barline
 	$command .= " --xml-id-seed 123456789"; # Random number seed for generating ids
 	$command .= " $file";                   # Input filename
 	print STDERR "$command\n";
